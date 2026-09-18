@@ -1,0 +1,13 @@
+name: kefu-reply-agent
+version: 1.2.0
+intent: 客服自动回复代理：按品牌语气规则生成回复草稿，禁止承诺退款
+params:
+  customer_text: string, required
+  tone: string
+rules:
+  - 必须引用客户订单号原句
+  - 禁止出现退款以外的补偿承诺
+  - 语气优先使用品牌词表
+outputs:
+  - draft
+  - confidence

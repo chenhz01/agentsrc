@@ -1,26 +1,26 @@
-# agentsrc — Prompt-as-Source Toolkit
+# agentsrc — your prompts are source code. You just haven't been compiling them.
 
-> **Core thesis**: Prompt engineering is evolving from unstructured text toward **Agent source code**.
-> Prompts deserve what code already has: a schema, a compiler, semantic versioning, and governance.
+Somewhere in your repo there's a 4,000-character prompt that three people edited this month.
+Nobody knows what changed. Nobody knows if it still works. Your agent is running on vibes.
 
-`agentsrc` is a zero-dependency Python toolkit that treats an agent's prompt as a *compiled artifact* with build-time guarantees, not a blob of prose.
+`agentsrc` is a zero-dependency Python toolkit (511 lines, stdlib only) that gives prompts what
+code already has: a schema, semantic versioning, a linker, and a ledger.
 
-**v0.2 — Governed growth.** Self-improving agents (e.g. hermes-agent, 246k★) grow their own skills at runtime — but growth without a ledger is drift. `agentsrc.registry` adds the missing audit layer for `agentskills.io`-standard SKILL.md files: every semantic change is detected, versioned, and recorded; unversioned drift is flagged as a governance violation.
+**26 tests in 0.12s. No dependencies. No API keys. Copy the folder, you're running.**
 
-## Why
+## The problem in one table
 
-| Treating prompts as text | Treating prompts as source |
+| Prompts as text | Prompts as source (agentsrc) |
 |---|---|
-| Broken silently at runtime | **Fails at "compile time"** (schema validation) |
-| Version = `v2_final_really` | **Semantic versioning driven by similarity** |
-| Truncation = chop the tail (kills your hard constraints) | **Semantic truncation** keeps intent anchors |
-| Intent flows one way (human writes, machine guesses) | **Bidirectional intent bridge** (manifest ⇄ MCP tool descriptor) |
+| Breaks silently at runtime | Fails at "compile time" (schema validation) |
+| Version = `v2_final_really` | Version bumped by semantic similarity |
+| Truncation chops the tail — kills your 必须/禁止 constraints | Truncation keeps intent anchors alive |
+| Intent flows one way | Bidirectional bridge: manifest ⇄ MCP tool descriptor |
 
-## Install & Quickstart
+## Quickstart
 
 ```bash
-# zero dependencies, Python 3.10+
-pip install agentsrc   # or: copy the agentsrc/ folder into your project
+pip install agentsrc   # or just copy agentsrc/ into your project
 ```
 
 ```python
@@ -29,62 +29,83 @@ from agentsrc import parse, validate, bump, semantic_truncate, to_mcp_tool
 manifest = parse(open("examples/kefu-reply.agentsrc", encoding="utf-8").read())
 errors = validate(manifest)            # [] => build passes
 
-# prompt changed? get a governed version bump, not a guess
 new_version, level, ratio = bump("1.2.0", old_prompt, new_prompt)
 
-# context window tight? truncate WITHOUT losing your 必须/禁止 constraints
 safe_prompt, stats = semantic_truncate(long_prompt, budget_chars=4000)
 
-# expose the agent's intent as an MCP tool descriptor
-tool = to_mcp_tool(manifest)
+tool = to_mcp_tool(manifest)           # your intent, exposed as an MCP tool
 ```
 
-## Modules
+## v0.2 — hermes-agent grows skills. Who keeps the books?
 
-| Module | Since | What it does |
-|---|---|---|
-| `schema.py` | v0.1 | A **deliberately small YAML subset** + strict validation. Small subset = harder errors, earlier. |
-| `semver.py` | v0.1 | Similarity-driven versioning: `<0.70 → MAJOR`, `<0.95 → MINOR`, else `PATCH`. Pluggable similarity fn (bring your own embeddings). |
-| `truncate.py` | v0.1 | **Semantic truncation**: scores sentences by intent anchors (必须/禁止/must/never…), keeps high-scoring ones within budget, preserves order. |
-| `bridge.py` | v0.1 | **Bidirectional bridge**: manifest → MCP tool descriptor, and back. Round-trip closes the governance loop. |
-| `registry.py` | **v0.2** | **Governed growth ledger**: audits `SKILL.md` (agentskills.io standard) for four states — `new / ok / drift / noise / bumped`; auto-bumps versions by semantic similarity; JSONL ledger with rollback. Turns "the agent that grows with you" into "growth that keeps accounts". |
+[NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) (246k★) sells itself
+as *"the agent that grows with you"* — skills that create and improve themselves at runtime.
+We read the code and asked one question: **who audits the growth?**
 
-## Registry quickstart (v0.2)
+Nobody. So `agentsrc.registry` does it for any `agentskills.io`-standard `SKILL.md`:
 
 ```python
 from agentsrc import SkillRegistry
 
 reg = SkillRegistry("ledger.jsonl")
 reg.audit("skills/kefu/SKILL.md")
-# {"status": "drift", "level": "major", "recommended_version": "2.0.0",
-#  "action": "内容变了版本没升——治理违规！应升 2.0.0 并 record()"}
+# {"status": "drift", "recommended_version": "2.0.0",
+#  "action": "内容变了版本没升——治理违规！"}
 
-reg.record("skills/kefu/SKILL.md", note="语义升级")   # auto-bump + write-back + ledger
-reg.audit_dir("skills/")                            # batch audit (agentskills.io layout)
+reg.record("skills/kefu/SKILL.md", note="语义升级")  # auto-bump + write-back + JSONL ledger
+reg.audit_dir("skills/")                             # batch audit
 reg.rollback("kefu-tone", "skills/kefu/SKILL.md", to_version="1.0.0")
 ```
 
-## Positioning
+Four states per skill: `new / ok / drift / noise`. Content changed without a version bump =
+**drift = governance violation**, flagged immediately. Growth keeps accounts.
 
-| Project | Overlap | Difference |
+## Why we built this (honestly)
+
+We run production agents. Someone (usually us) edits a prompt, and the only version control is
+memory. DSPy compiles prompts but has no version governance; promptfoo tests them but has no
+schema or semver; MCP moves them but doesn't govern them. The seam between all of them was
+empty — so we filled it. agentsrc isn't a competitor to these tools; it's the missing upstream.
+
+## Honest limits (read before you trust us)
+
+- v0.2 similarity is a **character-level baseline** (`difflib`). A paraphrase rewrite can fool it.
+  That's exactly why `similarity()` accepts an injected embedding function — see Collaboration.
+- Chinese intent anchors (必须/禁止) are hardcoded defaults; custom anchors work, CJK tokenization
+  is heuristic, not linguistic.
+- Zero-dependency means zero-dependency: no pydantic sugar. The YAML subset is deliberately tiny
+  (that's the feature — small subset, earlier errors).
+
+## Modules
+
+| Module | Since | What it does |
 |---|---|---|
-| DSPy | prompt compilation | No version governance / no truncation semantics |
-| promptfoo | prompt testing | No schema or semver layer |
-| MCP | transport protocol | agentsrc feeds *into* MCP, doesn't replace it |
-| LangChain | runtime glue | No build-time contract for the prompt itself |
+| `schema.py` | v0.1 | Deliberately small YAML subset + strict validation |
+| `semver.py` | v0.1 | `<0.70 → MAJOR`, `<0.95 → MINOR`, else `PATCH`; pluggable similarity |
+| `truncate.py` | v0.1 | Intent-anchor scoring (必须/禁止 +3, numbered +2), order-preserving truncation |
+| `bridge.py` | v0.1 | Bidirectional manifest ⇄ MCP tool descriptor |
+| `registry.py` | v0.2 | Growth ledger: audit / record / rollback / batch, for agentskills.io SKILL.md |
 
 ## Roadmap
 
-- **v0.2** — `ParserRegistry` (pluggable parsers), embedding-based similarity default, A2A adapter
-- **v0.3** — Pydantic-style compile-time contracts, RAG-indexed anchor weighting
-- **v0.4** — WASM sandbox runner, OpenTelemetry span export (`agentsrc.build`, `agentsrc.truncate`)
+- **v0.3** — embedding-based similarity default, RAG-indexed anchor weighting
+- **v0.4** — Pydantic-style compile-time contracts, A2A adapter, OpenTelemetry span export
 
-> Honesty note: v0.1 similarity is a character-level baseline (`difflib`). It can be fooled by
-> paraphrase rewrites — that is exactly why `similarity()` accepts an injected embedding function.
+## Collaboration (what's behind the lock)
+
+Some parts of this problem are 90% engineering, 10% judgment calls earned in production.
+The judgment calls aren't in the repo — they're available by working with us:
+
+- **Embedding similarity preset** (kill the paraphrase loophole for real)
+- **RAG-indexed anchor weighting** (stop guessing which sentences matter)
+- **Industry prompt recipe templates** (e-commerce support, brand voice, compliance)
+- **A2A full adapter** (manifest beyond MCP)
+
+Building something serious? → **hcac4735@agent.qq.com** (replies within 48h)
 
 ## License
 
-MIT © 2026 Shanlun — contact: hcac4735@agent.qq.com
+MIT © 2026 Shanlun
 
 ## Tests
 

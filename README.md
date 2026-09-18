@@ -5,6 +5,8 @@
 
 `agentsrc` is a zero-dependency Python toolkit that treats an agent's prompt as a *compiled artifact* with build-time guarantees, not a blob of prose.
 
+**v0.2 — Governed growth.** Self-improving agents (e.g. hermes-agent, 246k★) grow their own skills at runtime — but growth without a ledger is drift. `agentsrc.registry` adds the missing audit layer for `agentskills.io`-standard SKILL.md files: every semantic change is detected, versioned, and recorded; unversioned drift is flagged as a governance violation.
+
 ## Why
 
 | Treating prompts as text | Treating prompts as source |
@@ -37,15 +39,30 @@ safe_prompt, stats = semantic_truncate(long_prompt, budget_chars=4000)
 tool = to_mcp_tool(manifest)
 ```
 
-## Modules (v0.1.0)
+## Modules
 
-| Module | Rounds | What it does |
+| Module | Since | What it does |
 |---|---|---|
-| `schema.py` | r2 | A **deliberately small YAML subset** + strict validation. Small subset = harder errors, earlier. |
-| `semver.py` | r4 | Similarity-driven versioning: `<0.70 → MAJOR`, `<0.95 → MINOR`, else `PATCH`. Pluggable similarity fn (bring your own embeddings). |
-| `truncate.py` | r3 | **Semantic truncation**: scores sentences by intent anchors (必须/禁止/must/never…), keeps high-scoring ones within budget, preserves order. |
-| `bridge.py` | r4 | **Bidirectional bridge**: manifest → MCP tool descriptor, and back. Round-trip closes the governance loop. |
-| `ParserRegistry` | r3 | Pluggable parsers land in v0.2 (registry seam already isolated in `schema.parse`). |
+| `schema.py` | v0.1 | A **deliberately small YAML subset** + strict validation. Small subset = harder errors, earlier. |
+| `semver.py` | v0.1 | Similarity-driven versioning: `<0.70 → MAJOR`, `<0.95 → MINOR`, else `PATCH`. Pluggable similarity fn (bring your own embeddings). |
+| `truncate.py` | v0.1 | **Semantic truncation**: scores sentences by intent anchors (必须/禁止/must/never…), keeps high-scoring ones within budget, preserves order. |
+| `bridge.py` | v0.1 | **Bidirectional bridge**: manifest → MCP tool descriptor, and back. Round-trip closes the governance loop. |
+| `registry.py` | **v0.2** | **Governed growth ledger**: audits `SKILL.md` (agentskills.io standard) for four states — `new / ok / drift / noise / bumped`; auto-bumps versions by semantic similarity; JSONL ledger with rollback. Turns "the agent that grows with you" into "growth that keeps accounts". |
+
+## Registry quickstart (v0.2)
+
+```python
+from agentsrc import SkillRegistry
+
+reg = SkillRegistry("ledger.jsonl")
+reg.audit("skills/kefu/SKILL.md")
+# {"status": "drift", "level": "major", "recommended_version": "2.0.0",
+#  "action": "内容变了版本没升——治理违规！应升 2.0.0 并 record()"}
+
+reg.record("skills/kefu/SKILL.md", note="语义升级")   # auto-bump + write-back + ledger
+reg.audit_dir("skills/")                            # batch audit (agentskills.io layout)
+reg.rollback("kefu-tone", "skills/kefu/SKILL.md", to_version="1.0.0")
+```
 
 ## Positioning
 
@@ -72,5 +89,5 @@ MIT © 2026 Shanlun — contact: hcac4735@agent.qq.com
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v   # 19 tests, all green on 3.12/3.13
+python -m unittest discover -s tests -v   # 26 tests, all green on 3.12/3.13
 ```

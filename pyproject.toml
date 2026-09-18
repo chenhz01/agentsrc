@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentsrc"
-version = "0.1.0"
+version = "0.2.0"
 description = "Prompt-as-Source Toolkit: schema + semantic versioning + semantic truncation + MCP intent bridge for agent prompts. Zero dependencies."
 readme = "README.md"
 requires-python = ">=3.10"

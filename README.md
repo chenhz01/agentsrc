@@ -6,7 +6,7 @@ Nobody knows what changed. Nobody knows if it still works. Your agent is running
 `agentsrc` is a zero-dependency Python toolkit (511 lines, stdlib only) that gives prompts what
 code already has: a schema, semantic versioning, a linker, and a ledger.
 
-**26 tests in 0.12s. No dependencies. No API keys. Copy the folder, you're running.**
+**26 tests in 0.09s. No dependencies. No API keys. Copy the folder, you're running.**
 
 ## The problem in one table
 

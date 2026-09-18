@@ -95,6 +95,7 @@ class TestRegistry(unittest.TestCase):
         self.reg.rollback("kefu-tone", self.skill, to_version="1.0.0")
         body = parse_skill_md(self.skill.read_text(encoding="utf-8"))[1]
         self.assertIn("禁止承诺退款。", body)  # 回到 v1 内容
+        self.assertNotIn("退款以外的补偿", body)  # v2 内容必须消失（防「新旧正文拼接」回归）
         hist = [e for e in self.store.read_text(encoding="utf-8").splitlines() if e.strip()]
         self.assertEqual(len(hist), 2)
         # 可逆性证明：账本只进不退——回滚后再 record，从账本末条 1.1.0 前向晋升 1.2.0（内容=旧版，版本向前）

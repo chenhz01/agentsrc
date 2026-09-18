@@ -14,7 +14,6 @@ import difflib
 import re
 
 MAJOR, MINOR, PATCH = "major", "minor", "patch"
-_LEVEL_ORDER = {PATCH: 0, MINOR: 1, MAJOR: 2}
 MAJOR_THRESHOLD = 0.70
 MINOR_THRESHOLD = 0.95
 

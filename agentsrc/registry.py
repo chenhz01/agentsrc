@@ -159,7 +159,13 @@ class SkillRegistry:
         if self._body_hash(body) != target["body_hash"]:
             self.record(path, note="rollback 前自动快照")  # 回滚本身上账
             text = path.read_text(encoding="utf-8")
-        path.write_text(_rewrite_front(text, target["version"]) + target["body"], encoding="utf-8")
+        # 重建文件：frontmatter（版本改为目标版）+ 账本快照中的原文正文。
+        # 注意不能复用 _rewrite_front（它保留当前正文），否则会拼出「当前正文+旧正文」。
+        m = _FRONT.match(text)
+        if not m:  # pragma: no cover — parse_skill_md 已通过，理论上不可达
+            raise ValueError("文件结构异常：frontmatter 丢失")
+        block = re.sub(r"(?m)^version:.*$", f"version: {target['version']}", m.group(1))
+        path.write_text(f"---\n{block}\n---\n{target['body']}", encoding="utf-8")
         return {"name": name, "rolled_back_to": target["version"]}
 
 

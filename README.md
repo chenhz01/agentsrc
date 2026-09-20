@@ -8,6 +8,8 @@ code already has: a schema, semantic versioning, a linker, and a ledger.
 
 **26 tests in 0.09s. No dependencies. No API keys. Copy the folder, you're running.**
 
+Hitting prompt drift in production? → [Jump to Collaboration](#collaboration--the-10-that-isnt-code)
+
 ## The problem in one table
 
 | Prompts as text | Prompts as source (agentsrc) |
@@ -91,17 +93,48 @@ empty — so we filled it. agentsrc isn't a competitor to these tools; it's the 
 - **v0.3** — embedding-based similarity default, RAG-indexed anchor weighting
 - **v0.4** — Pydantic-style compile-time contracts, A2A adapter, OpenTelemetry span export
 
-## Collaboration (what's behind the lock)
+## Collaboration — the 10% that isn't code
 
-Some parts of this problem are 90% engineering, 10% judgment calls earned in production.
-The judgment calls aren't in the repo — they're available by working with us:
+Here's the honest split. This repo is the 90% that is engineering: read it, run it, fork it, and we
+will never chase you about it. The other 10% is judgment — presets and thresholds we only found by
+pushing prompts into production and watching them break quietly.
 
-- **Embedding similarity preset** (kill the paraphrase loophole for real)
-- **RAG-indexed anchor weighting** (stop guessing which sentences matter)
-- **Industry prompt recipe templates** (e-commerce support, brand voice, compliance)
-- **A2A full adapter** (manifest beyond MCP)
+That 10% stays out of the repo. Not to tease you: it is the part that took the longest, and the part
+that fails the most silently when it is wrong.
 
-Building something serious? → **hcac4735@agent.qq.com** (replies within 48h)
+| Tier | What you get | Where it lives |
+|---|---|---|
+| 🌱 Open | All five modules, 26 tests, the hermes-agent gap analysis | This repo. MIT. Take it. |
+| 🔑 Partner | The presets and adapters below | One conversation away |
+| 💎 Never shipped | Production traces, client work, pricing | Our desk |
+
+**Behind the lock:**
+
+- **Embedding similarity preset** — what actually closes the paraphrase loophole. The shipped
+  `difflib` baseline gets fooled by a rewrite; this is the threshold pair we use instead.
+- **RAG-indexed anchor weighting** — `truncate.py` scores `必须/禁止` at +3. That number is an opening
+  guess. This is the version that survived contact with real 4,000-character prompts.
+- **Industry prompt recipes** — e-commerce support, brand voice, compliance. Working manifests, not
+  blank templates.
+- **A2A adapter** — manifest beyond MCP.
+
+**How to ask.** Two lines get you a real reply:
+
+1. What you are building, and what the prompt does inside it.
+2. Which item above you need, and what you already tried.
+
+A one-line "can I get the files" message gets a one-line answer. The two-line version usually gets the
+preset.
+
+→ **hcac4735@agent.qq.com** — replies inside 48h. 中文直接写，不用翻译成英文。
+→ Outside China, or mail bouncing? **shanlun2029@outlook.com** reaches us too.
+
+**Not a fit:** star swaps, "let's collaborate" with no project, anyone rebuilding this as a competing
+toolkit. **A fit:** you ship agents to real users, prompt governance has already bitten you once, and
+you would rather it stopped.
+
+Prefer to work in the open? Open an issue describing the failure mode your prompt has. We fold the
+sharpest ones into v0.3 and credit you in the commit.
 
 ## License
 

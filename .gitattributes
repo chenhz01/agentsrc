@@ -1,0 +1,13 @@
+# Normalize line endings: LF in the repo, on every platform.
+# Windows checkouts with core.autocrlf=true were writing CRLF into blobs;
+# this file makes it impossible to regress.
+* text=auto eol=lf
+
+# Binary — never touch
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary

@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **此仓已并入 [`skill-os`](https://github.com/chenhz01/skill-os)**（SPEC/Prompt-as-Source 并入旗舰）
+> 本仓转为只读归档，issue 与 star 请移步旗舰仓。
+
+---
+
 # agentsrc — your prompts are source code. You just haven't been compiling them.
 
 Somewhere in your repo there's a 4,000-character prompt that three people edited this month.
